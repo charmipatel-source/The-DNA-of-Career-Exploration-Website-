@@ -228,34 +228,37 @@
           ctx.restore();
         }
 
-        // 1. PASS 1 (BACK): Draw strand segments that are behind
-        drawStrandSegments(strand2, COLOR_DARK, false, false);
-        drawStrandSegments(strand1, COLOR_CYAN, false, false);
-
-        // 2. PASS 2 (MIDDLE): Draw rungs connecting the two strands
+        // Rungs connecting the two strands. Defined once, drawn in two layers.
         const rungInterval = 56; // Distance between horizontal rungs
         const totalRungs = Math.floor(height / rungInterval);
 
-        ctx.save();
-        ctx.lineWidth = 11;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = COLOR_RUNG;
-
-        for (let r = 0; r <= totalRungs + 1; r++) {
+        function drawRung(r) {
           const targetY = r * rungInterval;
           const idx = Math.min(Math.floor(targetY / dy), strand1.length - 1);
-
+          ctx.save();
+          ctx.lineWidth = 11;
+          ctx.lineCap = 'round';
+          ctx.strokeStyle = COLOR_RUNG;
           ctx.beginPath();
           ctx.moveTo(strand1[idx].x, strand1[idx].y);
           ctx.lineTo(strand2[idx].x, strand2[idx].y);
           ctx.stroke();
+          ctx.restore();
         }
-        ctx.restore();
+
+        // 1. BOTTOM LAYER: only the topmost rung sits under the strands
+        drawRung(0);
+
+        // 2. PASS 2 (BACK): Draw strand segments that are behind
+        drawStrandSegments(strand2, COLOR_DARK, false, false);
+        drawStrandSegments(strand1, COLOR_CYAN, false, false);
 
         // 3. PASS 3 (FRONT): Draw strand segments that are in front
-        // Cyan gets the neon biotech glow when passing in front
         drawStrandSegments(strand2, COLOR_DARK, true, false);
-        drawStrandSegments(strand1, COLOR_CYAN, true, true);
+        drawStrandSegments(strand1, COLOR_CYAN, true, false);
+
+        // 4. TOP LAYER: all other rungs sit over both strands
+        for (let r = 1; r <= totalRungs + 1; r++) drawRung(r);
 
         requestAnimationFrame(draw);
       }
