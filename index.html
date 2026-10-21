@@ -5,131 +5,105 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The DNA of Career Exploration</title>
   
-  <!-- Retro Pixel Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-  
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
-  <script src="lab-notebook.js"></script>
 </head>
 <body>
-  <!-- Ambient CRT Scanline Overlay -->
   <div class="scanlines"></div>
 
-  <!-- 3D Rotating DNA Canvases (Original Colors & Tube Style) -->
+  <!-- 3D Rotating DNA Backgrounds -->
   <canvas id="dna-left" class="dna-canvas dna-left"></canvas>
   <canvas id="dna-right" class="dna-canvas dna-right"></canvas>
 
   <div class="viewport">
-    <!-- Header Titles -->
     <header class="main-header">
       <h1 class="glitch-title">THE DNA OF CAREER EXPLORATION</h1>
       <p class="sub-title">INTERACTIVE BIOTECH CAREER LADDER SYSTEM</p>
     </header>
 
-    <!-- Navigation Hub (Enlarged Buttons) -->
     <nav class="nav-cluster">
       <div class="nav-row row-top">
-        <button class="pixel-pill-btn">
-          <span class="btn-text">OVERVIEW</span>
-        </button>
-        <button class="pixel-pill-btn">
-          <span class="btn-text">AMINO ACID QUIZ</span>
-        </button>
-        <button class="pixel-pill-btn multi-line">
-          <span class="btn-text">SIMULATION &amp;<br>DILT</span>
-        </button>
+        <button class="pixel-pill-btn" type="button"><span class="btn-text">OVERVIEW</span></button>
+        <a href="quiz.html" class="pixel-pill-btn" id="btn-quiz"><span class="btn-text">AMINO ACID QUIZ</span></a>
+        <a href="crispr.html" class="pixel-pill-btn multi-line"><span class="btn-text">SIMULATION &amp;<br>DILT</span></a>
       </div>
-
       <div class="nav-row row-bottom">
-        <button class="pixel-pill-btn multi-line">
-          <span class="btn-text">INDUSTRY<br>TRAINING</span>
-        </button>
-        <button class="pixel-pill-btn">
-          <span class="btn-text">CERTIFICATION</span>
-        </button>
+        <button class="pixel-pill-btn multi-line" type="button"><span class="btn-text">INDUSTRY<br>TRAINING</span></button>
+        <button class="pixel-pill-btn" type="button"><span class="btn-text">CERTIFICATION</span></button>
       </div>
     </nav>
 
-    <!-- Main Content Panels with Interactive Terminal Tabs -->
     <main class="content-panels">
-      
       <!-- Panel 1: THE GAP -->
       <section class="panel-card">
-        <div class="panel-header">
-          <h2 class="panel-title">THE GAP</h2>
-          <div class="tab-bar">
-            <input type="radio" name="gap-tabs" id="tab-gap-diag" checked />
-            <label for="tab-gap-diag" class="tab-btn">DIAGNOSIS</label>
+        <h2 class="panel-title">THE GAP</h2>
+        <div class="tab-bar">
+          <input type="radio" name="gap-tabs" id="tab-gap-diag" checked />
+          <label for="tab-gap-diag" class="tab-btn">DIAGNOSIS</label>
+          <input type="radio" name="gap-tabs" id="tab-gap-stats" />
+          <label for="tab-gap-stats" class="tab-btn">METRICS</label>
+          <input type="radio" name="gap-tabs" id="tab-gap-pipe" />
+          <label for="tab-gap-pipe" class="tab-btn">PIPELINE</label>
 
-            <input type="radio" name="gap-tabs" id="tab-gap-stats" />
-            <label for="tab-gap-stats" class="tab-btn">METRICS</label>
-
-            <input type="radio" name="gap-tabs" id="tab-gap-pipe" />
-            <label for="tab-gap-pipe" class="tab-btn">PIPELINE</label>
-
-            <!-- Tab Content Views -->
-            <div class="tab-content content-gap-diag">
-              <p class="placeholder-text">&gt; SYSTEM READY: Identify structural disparities in biotechnology workforce pathways and academic bottlenecks.</p>
-            </div>
-            <div class="tab-content content-gap-stats">
-              <p class="placeholder-text">&gt; ATTRITION RATE: 42% exit STEM pre-career. Lack of hands-on simulation environments detected.</p>
-            </div>
-            <div class="tab-content content-gap-pipe">
-              <p class="placeholder-text">&gt; PATHWAY DEFICIT: High demand in gene editing &amp; bioprocess QA; low visibility for early students.</p>
-            </div>
+          <div class="tab-content content-gap-diag">
+            <p class="placeholder-text"><span class="prompt-arrow">&gt;</span> The bridge between students and the local biotech industry.</p>
+          </div>
+          <div class="tab-content content-gap-stats">
+            <p class="placeholder-text"><span class="prompt-arrow">&gt;</span> Although New Jersey is a top-three biotech hub in the country, local students often lack awareness and access to the opportunities in their community.</p>
+          </div>
+          <div class="tab-content content-gap-pipe">
+            <p class="placeholder-text"><span class="prompt-arrow">&gt;</span> Many students feel pressured to choose a specific career path early without any real experience or application. Most high schools do not have modern biotech laboratories, making it difficult for students to practice hands-on skills.</p>
           </div>
         </div>
       </section>
 
       <!-- Panel 2: OUR SOLUTION -->
       <section class="panel-card">
-        <div class="panel-header">
-          <h2 class="panel-title">OUR SOLUTION</h2>
-          <div class="tab-bar">
-            <input type="radio" name="sol-tabs" id="tab-sol-matrix" checked />
-            <label for="tab-sol-matrix" class="tab-btn">LADDER</label>
+        <h2 class="panel-title">OUR SOLUTION</h2>
+        <div class="tab-bar">
+          <input type="radio" name="sol-tabs" id="tab-sol-matrix" checked />
+          <label for="tab-sol-matrix" class="tab-btn">LADDER</label>
+          <input type="radio" name="sol-tabs" id="tab-sol-sims" />
+          <label for="tab-sol-sims" class="tab-btn">VIRTUAL LAB</label>
+          <input type="radio" name="sol-tabs" id="tab-sol-cred" />
+          <label for="tab-sol-cred" class="tab-btn">BADGES</label>
 
-            <input type="radio" name="sol-tabs" id="tab-sol-sims" />
-            <label for="tab-sol-sims" class="tab-btn">VIRTUAL LAB</label>
-
-            <input type="radio" name="sol-tabs" id="tab-sol-cred" />
-            <label for="tab-sol-cred" class="tab-btn">BADGES</label>
-
-            <!-- Tab Content Views -->
-            <div class="tab-content content-sol-matrix">
-              <p class="placeholder-text">&gt; SYSTEM INITIALIZED: Interactive career ladder matching competencies from lab tech to lead geneticist.</p>
-            </div>
-            <div class="tab-content content-sol-sims">
-              <p class="placeholder-text">&gt; BIO-SIM ENGINE: In-browser CRISPR &amp; Chromatography drills with real-time feedback loops.</p>
-            </div>
-            <div class="tab-content content-sol-cred">
-              <p class="placeholder-text">&gt; MICRO-CREDENTIALS: Industry-recognized certification standards validated by regional biotech hubs.</p>
-            </div>
+          <div class="tab-content content-sol-matrix">
+            <p class="placeholder-text"><span class="prompt-arrow">&gt;</span> The “DNA Career Ladder”: an interactive digital resource designed to help students in their biotechnology career exploration.</p>
+          </div>
+          <div class="tab-content content-sol-sims">
+            <p class="placeholder-text"><span class="prompt-arrow">&gt;</span> With focus on accessibility and local connections, our resource utilizes a four step biology themed journey to identify personal interests, train soft skills, connect with peers, and find practical experience opportunities.</p>
+          </div>
+          <div class="tab-content content-sol-cred">
+            <p class="placeholder-text"><span class="prompt-arrow">&gt;</span> By providing actionable steps, our resource aims to give students a clear understanding of the field they will thrive in.</p>
           </div>
         </div>
       </section>
-
     </main>
 
-    <!-- Bottom Action & Status Footer -->
     <footer class="bottom-bar">
-      <!-- EXP Gauge -->
+      <!-- Role Match Display from Slides -->
+      <div class="role-display-pill">
+        <span class="role-label">ROLE:</span>
+        <span class="role-value" id="current-role">TAKE THE QUIZ TO MATCH!</span>
+      </div>
+
+      <!-- Original EXP Bar -->
       <div class="exp-container">
         <div class="exp-track">
-          <div class="exp-fill"></div>
+          <div class="exp-fill" id="exp-fill"></div>
           <span class="exp-label">EXP</span>
         </div>
       </div>
 
-      <!-- Action Buttons -->
       <div class="action-buttons">
-        <button class="action-btn">
+        <button class="action-btn" type="button">
           <span class="action-icon">📓</span>
           <span>LAB NOTEBOOK</span>
         </button>
-        <button class="action-btn">
+        <button class="action-btn" type="button">
           <span class="action-icon">🤖</span>
           <span>BIO-BOT 9000</span>
         </button>
@@ -137,139 +111,97 @@
     </footer>
   </div>
 
-  <!-- 3D Helical Rotation Engine (Original Continuous Tube Style) -->
+  <!-- Safe, Clean UI Sound Synth -->
   <script>
-    function renderRotatingHelix(canvasId, phaseOffset = 0) {
-      const canvas = document.getElementById(canvasId);
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      let width, height;
+    (function initUISounds() {
+      let uiCtx = null;
+      let lastHovered = null;
 
-      function resize() {
-        const dpr = window.devicePixelRatio || 1;
-        width = 220;
-        height = window.innerHeight;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        canvas.style.width = width + 'px';
-        canvas.style.height = height + 'px';
-        ctx.resetTransform();
-        ctx.scale(dpr, dpr);
+      function getCtx() {
+        try {
+          if (!uiCtx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (AC) uiCtx = new AC();
+          }
+          if (uiCtx && uiCtx.state === 'suspended') uiCtx.resume().catch(() => {});
+          return uiCtx;
+        } catch(e) { return null; }
       }
 
-      window.addEventListener('resize', resize);
-      resize();
-
-      let time = phaseOffset;
-
-      // Original Portal Color Palette
-      const COLOR_CYAN = '#41b8cd';
-      const COLOR_DARK = '#1e3a6e';
-      const COLOR_RUNG = '#243f73';
-
-      function draw() {
-        ctx.clearRect(0, 0, width, height);
-        time += 0.024; // 3D rotation speed
-
-        const centerX = width / 2;
-        const radiusX = 64;   // Helix width
-        const dy = 4;         // High-res curve step
-        const totalSteps = Math.ceil(height / dy) + 4;
-
-        // Arrays to store continuous coordinates for both strands
-        const strand1 = []; // Cyan Strand
-        const strand2 = []; // Dark Blue Strand
-
-        for (let i = 0; i <= totalSteps; i++) {
-          const y = i * dy;
-          const angle = y * 0.009 + time;
-
-          const cosA = Math.cos(angle);
-          const sinA = Math.sin(angle); // Z-depth: positive is front, negative is back
-
-          strand1.push({
-            x: centerX + radiusX * cosA,
-            y: y,
-            z: sinA
-          });
-
-          strand2.push({
-            x: centerX - radiusX * cosA,
-            y: y,
-            z: -sinA
-          });
-        }
-
-        // Helper to draw thick continuous ribbon tube segments
-        function drawStrandSegments(points, color, isFrontPass, glow = false) {
-          ctx.save();
-          ctx.lineWidth = 22;
-          ctx.lineCap = 'round';
-          ctx.lineJoin = 'round';
-          ctx.strokeStyle = color;
-
-          if (glow) {
-            ctx.shadowColor = '#41b8cd';
-            ctx.shadowBlur = 14;
-          }
-
-          for (let i = 1; i < points.length; i++) {
-            const p0 = points[i - 1];
-            const p1 = points[i];
-            const avgZ = (p0.z + p1.z) / 2;
-
-            // Only draw segments matching the current depth layer
-            if ((isFrontPass && avgZ >= 0) || (!isFrontPass && avgZ < 0)) {
-              ctx.beginPath();
-              ctx.moveTo(p0.x, p0.y);
-              ctx.lineTo(p1.x, p1.y);
-              ctx.stroke();
-            }
-          }
-          ctx.restore();
-        }
-
-        // Rungs connecting the two strands. Defined once, drawn in two layers.
-        const rungInterval = 56; // Distance between horizontal rungs
-        const totalRungs = Math.floor(height / rungInterval);
-
-        function drawRung(r) {
-          const targetY = r * rungInterval;
-          const idx = Math.min(Math.floor(targetY / dy), strand1.length - 1);
-          ctx.save();
-          ctx.lineWidth = 11;
-          ctx.lineCap = 'round';
-          ctx.strokeStyle = COLOR_RUNG;
-          ctx.beginPath();
-          ctx.moveTo(strand1[idx].x, strand1[idx].y);
-          ctx.lineTo(strand2[idx].x, strand2[idx].y);
-          ctx.stroke();
-          ctx.restore();
-        }
-
-        // 1. BOTTOM LAYER: only the topmost rung sits under the strands
-        drawRung(0);
-
-        // 2. PASS 2 (BACK): Draw strand segments that are behind
-        drawStrandSegments(strand2, COLOR_DARK, false, false);
-        drawStrandSegments(strand1, COLOR_CYAN, false, false);
-
-        // 3. PASS 3 (FRONT): Draw strand segments that are in front
-        drawStrandSegments(strand2, COLOR_DARK, true, false);
-        drawStrandSegments(strand1, COLOR_CYAN, true, false);
-
-        // 4. TOP LAYER: all other rungs sit over both strands
-        for (let r = 1; r <= totalRungs + 1; r++) drawRung(r);
-
-        requestAnimationFrame(draw);
+      function playHover() {
+        const c = getCtx();
+        if (!c) return;
+        try {
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(540, c.currentTime);
+          gain.gain.setValueAtTime(0.04, c.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.05);
+          osc.connect(gain);
+          gain.connect(c.destination);
+          osc.start();
+          osc.stop(c.currentTime + 0.05);
+        } catch(e) {}
       }
 
-      draw();
-    }
+      function playClick() {
+        const c = getCtx();
+        if (!c) return;
+        try {
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(300, c.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(150, c.currentTime + 0.07);
+          gain.gain.setValueAtTime(0.06, c.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.07);
+          osc.connect(gain);
+          gain.connect(c.destination);
+          osc.start();
+          osc.stop(c.currentTime + 0.07);
+        } catch(e) {}
+      }
 
-    // Initialize both left and right helixes with an offset
-    renderRotatingHelix('dna-left', 0);
-    renderRotatingHelix('dna-right', Math.PI * 0.7);
+      const selector = 'button, .pixel-pill-btn, .tab-btn, .action-btn';
+
+      // Plays hover sound on every button (including Lab Notebook)
+      document.addEventListener('mouseover', e => {
+        const btn = e.target.closest(selector);
+        if (btn && btn !== lastHovered) {
+          lastHovered = btn;
+          playHover();
+        }
+      });
+
+      document.addEventListener('mouseout', e => {
+        const btn = e.target.closest(selector);
+        if (btn && !btn.contains(e.relatedTarget)) {
+          lastHovered = null;
+        }
+      });
+
+      // Mutes click sound only on Lab Notebook so only paper.mp3 plays
+      document.addEventListener('mousedown', e => {
+        const btn = e.target.closest(selector);
+        if (btn && !/NOTEBOOK/i.test(btn.textContent)) playClick();
+      });
+
+      // Sync matched role pill from localStorage
+      function syncRole() {
+        try {
+          const savedRole = localStorage.getItem('biotech_matched_role');
+          const el = document.getElementById('current-role');
+          if (savedRole && el) el.textContent = savedRole.toUpperCase();
+        } catch(e) {}
+      }
+      syncRole();
+      window.addEventListener('storage', syncRole);
+    })();
   </script>
+
+  <script src="helix.js"></script>
+  <script src="labnotebook.js"></script>
+  <script src="biobot.js"></script>
 </body>
 </html>

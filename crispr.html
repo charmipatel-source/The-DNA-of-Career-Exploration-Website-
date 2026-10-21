@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRISPR Cas9 DNA Repair</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="crispr-page">
+  <div class="scanlines"></div>
+
+  <canvas id="dna-left" class="dna-canvas dna-left"></canvas>
+  <canvas id="dna-right" class="dna-canvas dna-right"></canvas>
+
+  <main class="cr-stage">
+    <h1 class="cr-title">CRISPR CAS9 DNA REPAIR</h1>
+    <p class="cr-intro">AUG is the universal start codon. Aim your Cas9 laser and target the bases in order: <strong>A &rarr; U &rarr; G &rarr; A &rarr; G &rarr; A</strong>.</p>
+
+    <section class="cr-frame" aria-label="CRISPR Cas9 DNA repair game">
+      <div class="cr-hud">
+        <span id="score">SCORE: 0</span>
+        <span id="target">TARGET SEQUENCE: A-U-G-A-G-A</span>
+        <span id="health">HEALTH: 100%</span>
+      </div>
+      <canvas id="game" width="1180" height="560"></canvas>
+
+      <div class="cr-overlay show" id="overlay">
+        <h2 id="ov-title">READY?</h2>
+        <p id="ov-text">Move: &larr; &rarr; or A / D (or Drag/Mouse)<br>Shoot: SPACE or Click / Tap<br>Hit the bases in sequence. Mismatches damage the cell!</p>
+        <button class="cr-btn" id="start-btn" type="button">START</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="cr-bar">
+    <!-- Original Clean EXP Bar -->
+    <div class="cr-exp">
+      <div class="cr-exp-track">
+        <div class="cr-exp-fill" id="exp-fill"></div>
+        <span class="cr-exp-label">EXP</span>
+      </div>
+    </div>
+    <div class="cr-actions">
+      <a href="index.html" class="cr-btn"><span>🚪</span> EXIT SIM</a>
+      <button class="cr-btn" type="button"><span>📓</span> LAB NOTEBOOK</button>
+      <button class="cr-btn" type="button"><span>🤖</span> BIO-BOT 9000</button>
+    </div>
+  </footer>
+
+  <script>
+    /* =========================================================
+       CRISPR AUDIO ENGINE & ARCADE LOOP
+       ========================================================= */
+    let actx = null;
+    let bgmInterval = null;
+    let bgmIndex = 0;
+
+    function getAudio() {
+      try {
+        if (!actx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) actx = new AudioContext();
+        }
+        if (actx && actx.state === 'suspended') {
+          actx.resume().catch(() => {});
+        }
+        return actx;
+      } catch(e) { return null; }
+    }
+
+    const Sound = {
+      hover() {
+        const c = getAudio();
+        if (!c) return;
+        try {
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(540, c.currentTime);
+          gain.gain.setValueAtTime(0.04, c.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.05);
+          osc.connect(gain);
+          gain.connect(c.destination);
+          osc.start();
+          osc.stop(c.currentTime + 0.05);
+        } catch(e) {}
+      },
+      click() {
+        const c = getAudio();
+        if (!c) return;
+        try {
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(300, c.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(150, c.currentTime + 0.07);
+          gain.gain.setValueAtTime(0.06, c.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.07);
+          osc.connect(gain);
+          gain.connect(c.destination);
+          osc.start();
+          osc.stop(c.currentTime + 0.07);
+        } catch(e) {}
+      },
+      laser() {
+        const c = getAudio();
+        if (!c) return;
+        try {
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(640, c.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(180, c.currentTime + 0.09);
+          gain.gain.setValueAtTime(0.08, c.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.09);
+          osc.connect(gain);
+          gain.connect(c.destination);
+          osc.start();
+          osc.stop(c.currentTime + 0.09);
+        } catch(e) {}
+      },
+      match() {
+        const c = getAudio();
+        if (!c) return;
+        try {
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523, c.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(784, c.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.09, c.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.12);
+          osc.connect(gain);
+          gain.connect(c.destination);
+          osc.start();
+          osc.stop(c.currentTime + 0.12);
+        } catch(e) {}
+      },
+      damage() {
+        const c = getAudio();
+        if (!c) return;
+        try {
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(140, c.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(60, c.currentTime + 0.16);
+          gain.gain.setValueAtTime(0.12, c.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.16);
+          osc.connect(gain);
+          gain.connect(c.destination);
+          osc.start();
+          osc.stop(c.currentTime + 0.16);
+        } catch(e) {}
+      },
+      win() {
+        const c = getAudio();
+        if (!c) return;
+        try {
+          [440, 554, 659, 880].forEach((freq, idx) => {
+            const osc = c.createOscillator();
+            const gain = c.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(freq, c.currentTime + idx * 0.08);
+            gain.gain.setValueAtTime(0.08, c.currentTime + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + idx * 0.08 + 0.2);
+            osc.connect(gain);
+            gain.connect(c.destination);
+            osc.start(c.currentTime + idx * 0.08);
+            osc.stop(c.currentTime + idx * 0.08 + 0.2);
+          });
+        } catch(e) {}
+      },
+      lose() {
+        const c = getAudio();
+        if (!c) return;
+        try {
+          [280, 220, 160].forEach((freq, idx) => {
+            const osc = c.createOscillator();
+            const gain = c.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, c.currentTime + idx * 0.1);
+            gain.gain.setValueAtTime(0.09, c.currentTime + idx * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + idx * 0.1 + 0.18);
+            osc.connect(gain);
+            gain.connect(c.destination);
+            osc.start(c.currentTime + idx * 0.1);
+            osc.stop(c.currentTime + idx * 0.1 + 0.18);
+          });
+        } catch(e) {}
+      },
+      startBGM() {
+        this.stopBGM();
+        const notes = [130.81, 164.81, 196.00, 246.94, 261.63, 196.00];
+        bgmInterval = setInterval(() => {
+          const c = getAudio();
+          if (!c) return;
+          try {
+            const osc = c.createOscillator();
+            const gain = c.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(notes[bgmIndex % notes.length], c.currentTime);
+            bgmIndex++;
+            gain.gain.setValueAtTime(0.024, c.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.38);
+            osc.connect(gain);
+            gain.connect(c.destination);
+            osc.start();
+            osc.stop(c.currentTime + 0.38);
+          } catch(e) {}
+        }, 360);
+      },
+      stopBGM() {
+        if (bgmInterval) {
+          clearInterval(bgmInterval);
+          bgmInterval = null;
+        }
+      }
+    };
+
+    /* Button Sounds for Game Page */
+    let lastHovered = null;
+    document.addEventListener('mouseover', e => {
+      const btn = e.target.closest('button, .cr-btn');
+      if (btn && btn !== lastHovered) {
+        lastHovered = btn;
+        if (!/NOTEBOOK/i.test(btn.textContent)) Sound.hover();
+      }
+    });
+    document.addEventListener('mouseout', e => {
+      const btn = e.target.closest('button, .cr-btn');
+      if (btn && !btn.contains(e.relatedTarget)) lastHovered = null;
+    });
+    document.addEventListener('mousedown', e => {
+      const btn = e.target.closest('button, .cr-btn');
+      if (btn && !/NOTEBOOK/i.test(btn.textContent)) Sound.click();
+    });
+
+    /* Arcade Game State */
+    const SEQ = ['A','U','G','A','G','A'];
+    const COLORS = { A:'#e8847c', U:'#a8e08a', G:'#fde172' };
+    const cv = document.getElementById('game'), ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    const $ = id => document.getElementById(id);
+
+    let bases, bullets, parts, idx, score, health, running = false, keys = {}, cool = 0;
+    const player = { x: W/2, w: 76, h: 28, speed: 5.4 };
+
+    function spawn(forceLetter) {
+      const letters = ['A','U','G'];
+      let l = forceLetter;
+      if (!l) {
+        const needed = idx < SEQ.length ? SEQ[idx] : null;
+        const copies = bases ? bases.filter(b => b.l === needed).length : 0;
+        do { l = letters[Math.floor(Math.random()*3)]; } while (l === needed && copies >= 2);
+      }
+      return { 
+        l, 
+        x: 50 + Math.random()*(W-100), 
+        y: 40 + Math.random()*(H-250), 
+        r: 19,
+        vx: (Math.random()<.5?-1:1)*(.3 + Math.random()*.42), 
+        vy: (Math.random()<.5?-1:1)*(.22 + Math.random()*.34) 
+      };
+    }
+
+    function reset() {
+      idx = 0; score = 0; health = 100; bullets = []; parts = []; bases = [];
+      for (let i = 0; i < 9; i++) bases.push(spawn());
+      if (!bases.some(b => b.l === SEQ[0])) bases[0].l = SEQ[0];
+      ['A','U','G'].forEach((L, i) => { if (!bases.some(b => b.l === L)) bases[i + 3].l = L; });
+      player.x = W/2; 
+      updateHUD();
+    }
+
+    function updateHUD() {
+      $('score').textContent = 'SCORE: ' + score;
+      $('health').textContent = 'HEALTH: ' + Math.max(0, health) + '%';
+      $('target').textContent = 'TARGET SEQUENCE: ' + SEQ.map((b, i) => i === idx ? `[${b}]` : b).join('-');
+      $('exp-fill').style.width = (14 + (idx / SEQ.length) * 86) + '%';
+    }
+
+    function burst(x, y, c) {
+      for (let i = 0; i < 14; i++) parts.push({ x, y, vx: (Math.random()-.5)*4, vy: (Math.random()-.5)*4, life: 24, c });
+    }
+
+    function shoot() {
+      if (!running || cool > 0) return;
+      Sound.laser();
+      bullets.push({ x: player.x, y: H - player.h - 32, r: 6 });
+      cool = 14;
+    }
+
+    function end(win) {
+      running = false;
+      Sound.stopBGM();
+      if (win) Sound.win(); else Sound.lose();
+      $('ov-title').textContent = win ? 'SEQUENCE REPAIRED!' : 'DNA DAMAGED!';
+      $('ov-text').innerHTML = win 
+        ? 'AUG Codon found! Protein synthesis initiated. Final score: ' + score + '.' 
+        : 'Cell integrity depleted. Final score: ' + score + '.';
+      $('start-btn').textContent = 'PLAY AGAIN';
+      $('overlay').classList.add('show');
+    }
+
+    function update() {
+      if (keys['ArrowLeft'] || keys['KeyA']) player.x -= player.speed;
+      if (keys['ArrowRight'] || keys['KeyD']) player.x += player.speed;
+      player.x = Math.max(player.w/2 + 6, Math.min(W - player.w/2 - 6, player.x));
+      if (cool > 0) cool--;
+      if (keys['Space']) shoot();
+
+      bases.forEach(b => {
+        b.x += b.vx; b.y += b.vy;
+        if (b.x < b.r || b.x > W - b.r) b.vx *= -1;
+        if (b.y < b.r + 20 || b.y > H - 150) b.vy *= -1;
+      });
+      bullets.forEach(b => b.y -= 7.5);
+      bullets = bullets.filter(b => b.y > -10);
+
+      for (const bl of bullets) {
+        for (const ba of bases) {
+          if (bl.dead || ba.dead) continue;
+          if (Math.hypot(bl.x - ba.x, bl.y - ba.y) < ba.r + bl.r) {
+            bl.dead = ba.dead = true;
+            if (ba.l === SEQ[idx]) { 
+              idx++; 
+              score += 15; 
+              Sound.match();
+              burst(ba.x, ba.y, COLORS[ba.l]); 
+            } else { 
+              health -= 10; 
+              Sound.damage();
+              burst(ba.x, ba.y, '#ff3333'); 
+            }
+          }
+        }
+      }
+      bullets = bullets.filter(b => !b.dead);
+      const n = bases.length;
+      bases = bases.filter(b => !b.dead);
+      while (bases.length < n) bases.push(spawn());
+      if (idx < SEQ.length && !bases.some(b => b.l === SEQ[idx])) bases[0] = spawn(SEQ[idx]);
+
+      parts.forEach(p => { p.x += p.vx; p.y += p.vy; p.life--; });
+      parts = parts.filter(p => p.life > 0);
+      updateHUD();
+      if (idx >= SEQ.length) end(true);
+      else if (health <= 0) end(false);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      bases.forEach(b => {
+        ctx.fillStyle = COLORS[b.l];
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#0b0f27'; ctx.font = 'bold 16px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(b.l, b.x, b.y + 1);
+      });
+      ctx.fillStyle = '#4deeea';
+      bullets.forEach(b => { ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill(); });
+      parts.forEach(p => { ctx.globalAlpha = p.life / 24; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, 4, 4); });
+      ctx.globalAlpha = 1;
+      
+      // Cas9 Emitter Cannon
+      ctx.fillStyle = '#4deeea'; ctx.fillRect(player.x - 5, H - player.h - 28, 10, 20);
+      ctx.fillStyle = '#1e3a6e';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(player.x - player.w/2, H - player.h - 10, player.w, player.h, 6);
+      else ctx.rect(player.x - player.w/2, H - player.h - 10, player.w, player.h);
+      ctx.fill();
+      ctx.strokeStyle = '#4deeea'; ctx.lineWidth = 2.5; ctx.stroke();
+    }
+
+    function loop() {
+      if (running) update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function start() {
+      getAudio();
+      Sound.startBGM();
+      reset(); 
+      running = true;
+      $('overlay').classList.remove('show');
+    }
+
+    $('start-btn').addEventListener('click', start);
+    document.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (['ArrowLeft','ArrowRight','Space','KeyA','KeyD'].includes(e.code)) e.preventDefault();
+      if (e.code === 'Space') { getAudio(); shoot(); }
+      if (e.code === 'Enter' && !running) start();
+    });
+    document.addEventListener('keyup', e => { keys[e.code] = false; });
+
+    function pointerX(e) {
+      const r = cv.getBoundingClientRect();
+      const cx = (e.touches ? e.touches[0].clientX : e.clientX);
+      return (cx - r.left) * (W / r.width);
+    }
+    cv.addEventListener('mousemove', e => { if (running) player.x = pointerX(e); });
+    cv.addEventListener('mousedown', e => { if (running) { getAudio(); player.x = pointerX(e); shoot(); } });
+    cv.addEventListener('touchstart', e => { if (running) { getAudio(); e.preventDefault(); player.x = pointerX(e); shoot(); } }, { passive: false });
+    cv.addEventListener('touchmove', e => { if (running) { e.preventDefault(); player.x = pointerX(e); } }, { passive: false });
+
+    reset(); 
+    loop();
+  </script>
+
+  <script src="helix.js"></script>
+  <script src="labnotebook.js"></script>
+  <script src="biobot.js"></script>
+</body>
+</html>
