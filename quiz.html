@@ -38,7 +38,7 @@
       text-align: center;
     }
 
-    /* Molecular Base Pair Diagram from Slides */
+    /* Molecular Base Pair Diagram from Project Slides */
     .base-diagram {
       display: flex;
       flex-direction: column;
@@ -75,7 +75,7 @@
       background: repeating-linear-gradient(90deg, #fde172 0, #fde172 8px, transparent 8px, transparent 14px);
     }
 
-    /* Quiz Question Panel */
+    /* Question Box */
     .quiz-card {
       width: 100%;
       background: rgba(11, 15, 39, 0.85);
@@ -137,14 +137,8 @@
       transform: translateY(-2px);
       box-shadow: 0 0 16px var(--cyan-glow);
     }
-    .quiz-option-btn.selected {
-      border-color: var(--pink-exp);
-      background: rgba(255, 82, 177, 0.15);
-      box-shadow: 0 0 18px var(--pink-glow);
-      color: #ffffff;
-    }
 
-    /* Outcome Panel */
+    /* Outcome Screen */
     .outcome-panel {
       display: none;
       flex-direction: column;
@@ -248,7 +242,7 @@
 
   <script>
     /* =========================================================
-       4-STAGE QUESTIONNAIRE (REDUNDANCIES FIXED FROM SLIDES)
+       4-STAGE QUESTIONNAIRE + LIVE BIO-BOT COACHING
        ========================================================= */
     const QUIZ_QUESTIONS = [
       {
@@ -330,7 +324,6 @@
         grid.appendChild(btn);
       });
 
-      // Update progress bar
       const pct = ((curQ + 1) / QUIZ_QUESTIONS.length) * 100;
       document.getElementById('exp-fill').style.width = pct + '%';
     }
@@ -339,7 +332,16 @@
       votes[role] = (votes[role] || 0) + 1;
       curQ++;
 
+      const remaining = QUIZ_QUESTIONS.length - curQ;
+
       if (curQ < QUIZ_QUESTIONS.length) {
+        if (window.setBioGuideSpeech) {
+          if (remaining === 1) {
+            setBioGuideSpeech("Almost there! 1 Question left!");
+          } else {
+            setBioGuideSpeech(`Keep going! ${remaining} Questions left!`);
+          }
+        }
         renderQuestion();
       } else {
         finishQuiz();
@@ -347,7 +349,6 @@
     }
 
     function finishQuiz() {
-      // Pick role with highest score (default to DNA Analyst if tied)
       let matchedRole = "DNA Analyst";
       let topCount = -1;
       for (const [r, cnt] of Object.entries(votes)) {
@@ -357,10 +358,10 @@
         }
       }
 
-      // Save to localStorage so it syncs across Portal & Simulation
+      // Save matched role permanently
       localStorage.setItem('biotech_matched_role', matchedRole);
 
-      // Hide question card, show outcome
+      // Hide question panel, reveal result
       document.getElementById('quiz-card').style.display = 'none';
       document.getElementById('base-diagram').style.display = 'none';
       document.getElementById('stage-heading').textContent = "MATCH RESULT";
@@ -372,15 +373,15 @@
       document.getElementById('matched-role-desc').textContent = ROLE_DETAILS[matchedRole] || "Ready for field simulation.";
       document.getElementById('current-role').textContent = matchedRole.toUpperCase();
 
+      // Bio-bot celebration message at completion
       if (window.setBioGuideSpeech) {
-        setBioGuideSpeech(`Codon Match: ${matchedRole}! Ready to launch your simulation?`);
+        setBioGuideSpeech(`Outstanding diagnostic work! Codon decoded: ${matchedRole}! Now let's enter the lab—click below to begin the CRISPR simulation!`);
       }
     }
 
     renderQuestion();
   </script>
 
-  <!-- Modular Scripts -->
   <script src="helix.js"></script>
   <script src="labnotebook.js"></script>
   <script src="biobot.js"></script>
