@@ -26,7 +26,7 @@
         <span id="target">TARGET SEQUENCE: A-U-G-A-G-A</span>
         <span id="health">HEALTH: 100%</span>
       </div>
-      <canvas id="game" width="1180" height="560"></canvas>
+      <canvas id="game" width="1180" height="640"></canvas>
 
       <div class="cr-overlay show" id="overlay">
         <h2 id="ov-title">READY?</h2>
@@ -37,11 +37,15 @@
   </main>
 
   <footer class="cr-bar">
-    <!-- Original Clean EXP Bar -->
+    <div class="role-display-pill">
+      <span class="role-label">ROLE:</span>
+      <span class="role-value" id="current-role">DNA ANALYST</span>
+    </div>
+
     <div class="cr-exp">
       <div class="cr-exp-track">
         <div class="cr-exp-fill" id="exp-fill"></div>
-        <span class="cr-exp-label">EXP</span>
+        <span class="cr-exp-label">SIMULATION EXP</span>
       </div>
     </div>
     <div class="cr-actions">
@@ -52,9 +56,6 @@
   </footer>
 
   <script>
-    /* =========================================================
-       CRISPR AUDIO ENGINE & ARCADE LOOP
-       ========================================================= */
     let actx = null;
     let bgmInterval = null;
     let bgmIndex = 0;
@@ -73,39 +74,6 @@
     }
 
     const Sound = {
-      hover() {
-        const c = getAudio();
-        if (!c) return;
-        try {
-          const osc = c.createOscillator();
-          const gain = c.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(540, c.currentTime);
-          gain.gain.setValueAtTime(0.04, c.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.05);
-          osc.connect(gain);
-          gain.connect(c.destination);
-          osc.start();
-          osc.stop(c.currentTime + 0.05);
-        } catch(e) {}
-      },
-      click() {
-        const c = getAudio();
-        if (!c) return;
-        try {
-          const osc = c.createOscillator();
-          const gain = c.createGain();
-          osc.type = 'square';
-          osc.frequency.setValueAtTime(300, c.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(150, c.currentTime + 0.07);
-          gain.gain.setValueAtTime(0.06, c.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.07);
-          osc.connect(gain);
-          gain.connect(c.destination);
-          osc.start();
-          osc.stop(c.currentTime + 0.07);
-        } catch(e) {}
-      },
       laser() {
         const c = getAudio();
         if (!c) return;
@@ -222,25 +190,6 @@
       }
     };
 
-    /* Button Sounds for Game Page */
-    let lastHovered = null;
-    document.addEventListener('mouseover', e => {
-      const btn = e.target.closest('button, .cr-btn');
-      if (btn && btn !== lastHovered) {
-        lastHovered = btn;
-        if (!/NOTEBOOK/i.test(btn.textContent)) Sound.hover();
-      }
-    });
-    document.addEventListener('mouseout', e => {
-      const btn = e.target.closest('button, .cr-btn');
-      if (btn && !btn.contains(e.relatedTarget)) lastHovered = null;
-    });
-    document.addEventListener('mousedown', e => {
-      const btn = e.target.closest('button, .cr-btn');
-      if (btn && !/NOTEBOOK/i.test(btn.textContent)) Sound.click();
-    });
-
-    /* Arcade Game State */
     const SEQ = ['A','U','G','A','G','A'];
     const COLORS = { A:'#e8847c', U:'#a8e08a', G:'#fde172' };
     const cv = document.getElementById('game'), ctx = cv.getContext('2d');
@@ -275,6 +224,9 @@
       ['A','U','G'].forEach((L, i) => { if (!bases.some(b => b.l === L)) bases[i + 3].l = L; });
       player.x = W/2; 
       updateHUD();
+
+      const saved = localStorage.getItem('biotech_matched_role');
+      if (saved) $('current-role').textContent = saved.toUpperCase();
     }
 
     function updateHUD() {

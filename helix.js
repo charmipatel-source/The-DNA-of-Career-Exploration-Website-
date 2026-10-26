@@ -1,5 +1,6 @@
 /* =========================================================
-   helix.js — 3D Helical Dual Strand Engine (Calm Pace)
+   helix.js — 3D Helical Dual Strand Engine
+   Clean 100vh Ceiling-to-Floor Strands
    ========================================================= */
 
 function renderRotatingHelix(canvasId, phaseOffset) {

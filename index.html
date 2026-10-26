@@ -20,18 +20,20 @@
   <div class="viewport">
     <header class="main-header">
       <h1 class="glitch-title">THE DNA OF CAREER EXPLORATION</h1>
-      <p class="sub-title">INTERACTIVE BIOTECH CAREER LADDER SYSTEM</p>
     </header>
 
-    <nav class="nav-cluster">
-      <div class="nav-row row-top">
-        <button class="pixel-pill-btn" type="button"><span class="btn-text">OVERVIEW</span></button>
-        <a href="quiz.html" class="pixel-pill-btn" id="btn-quiz"><span class="btn-text">AMINO ACID QUIZ</span></a>
-        <a href="crispr.html" class="pixel-pill-btn multi-line"><span class="btn-text">SIMULATION &amp;<br>DILT</span></a>
+    <nav class="nav-cluster" id="main-nav-cluster">
+      <div class="nav-row row-top" id="nav-row-top">
+        <button class="pixel-pill-btn nav-optional btn-locked" id="btn-overview" type="button"><span class="btn-text">OVERVIEW</span></button>
+        <!-- Step 1: Quiz Button -->
+        <a href="quiz.html" class="pixel-pill-btn solo-quiz-glow" id="btn-quiz"><span class="btn-text">AMINO ACID QUIZ</span></a>
+        <!-- Step 2: Simulation Button -->
+        <a href="crispr.html" class="pixel-pill-btn multi-line nav-optional btn-locked" id="btn-sim"><span class="btn-text">SIMULATION &amp;<br>DILT</span></a>
       </div>
-      <div class="nav-row row-bottom">
-        <button class="pixel-pill-btn multi-line" type="button"><span class="btn-text">INDUSTRY<br>TRAINING</span></button>
-        <button class="pixel-pill-btn" type="button"><span class="btn-text">CERTIFICATION</span></button>
+      <div class="nav-row row-bottom btn-locked" id="nav-row-bottom">
+        <!-- Step 3 & 4: Industry Training & Certification -->
+        <a href="training.html" class="pixel-pill-btn multi-line nav-optional btn-locked" id="btn-training"><span class="btn-text">INDUSTRY<br>TRAINING</span></a>
+        <a href="training.html" class="pixel-pill-btn nav-optional btn-locked" id="btn-cert"><span class="btn-text">CERTIFICATION</span></a>
       </div>
     </nav>
 
@@ -84,13 +86,13 @@
     </main>
 
     <footer class="bottom-bar">
-      <!-- Role Match Display from Slides -->
+      <!-- Role Match Display Pill -->
       <div class="role-display-pill">
         <span class="role-label">ROLE:</span>
         <span class="role-value" id="current-role">TAKE THE QUIZ TO MATCH!</span>
       </div>
 
-      <!-- Original EXP Bar -->
+      <!-- EXP Bar -->
       <div class="exp-container">
         <div class="exp-track">
           <div class="exp-fill" id="exp-fill"></div>
@@ -111,8 +113,39 @@
     </footer>
   </div>
 
-  <!-- Safe, Clean UI Sound Synth -->
   <script>
+    /* Dynamic Progression Logic */
+    (function checkLadderProgress() {
+      const matchedRole = localStorage.getItem('biotech_matched_role');
+      const quizBtn = document.getElementById('btn-quiz');
+      const simBtn = document.getElementById('btn-sim');
+      const trainBtn = document.getElementById('btn-training');
+      const certBtn = document.getElementById('btn-cert');
+      const overviewBtn = document.getElementById('btn-overview');
+      const optionals = document.querySelectorAll('.nav-optional');
+      const rowBottom = document.getElementById('nav-row-bottom');
+
+      if (!matchedRole) {
+        optionals.forEach(b => b.classList.add('btn-locked'));
+        if (rowBottom) rowBottom.classList.add('btn-locked');
+        if (quizBtn) quizBtn.classList.add('solo-quiz-glow');
+      } else {
+        optionals.forEach(b => b.classList.remove('btn-locked'));
+        if (rowBottom) rowBottom.classList.remove('btn-locked');
+        if (quizBtn) {
+          quizBtn.classList.remove('solo-quiz-glow');
+          quizBtn.classList.add('btn-completed');
+          quizBtn.querySelector('.btn-text').textContent = 'QUIZ ✓';
+        }
+        if (simBtn) {
+          simBtn.classList.add('solo-quiz-glow');
+        }
+        const roleEl = document.getElementById('current-role');
+        if (roleEl) roleEl.textContent = matchedRole.toUpperCase();
+      }
+    })();
+
+    /* UI Audio Synthesizer */
     (function initUISounds() {
       let uiCtx = null;
       let lastHovered = null;
@@ -165,7 +198,6 @@
 
       const selector = 'button, .pixel-pill-btn, .tab-btn, .action-btn';
 
-      // Plays hover sound on every button (including Lab Notebook)
       document.addEventListener('mouseover', e => {
         const btn = e.target.closest(selector);
         if (btn && btn !== lastHovered) {
@@ -181,27 +213,16 @@
         }
       });
 
-      // Mutes click sound only on Lab Notebook so only paper.mp3 plays
       document.addEventListener('mousedown', e => {
         const btn = e.target.closest(selector);
         if (btn && !/NOTEBOOK/i.test(btn.textContent)) playClick();
       });
-
-      // Sync matched role pill from localStorage
-      function syncRole() {
-        try {
-          const savedRole = localStorage.getItem('biotech_matched_role');
-          const el = document.getElementById('current-role');
-          if (savedRole && el) el.textContent = savedRole.toUpperCase();
-        } catch(e) {}
-      }
-      syncRole();
-      window.addEventListener('storage', syncRole);
     })();
   </script>
 
   <script src="helix.js"></script>
   <script src="labnotebook.js"></script>
+  <script src="config.js"></script>
   <script src="biobot.js"></script>
 </body>
 </html>
