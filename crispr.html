@@ -9,6 +9,38 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Completion Overlay Styling */
+    .ov-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+      width: 100%;
+      max-width: 440px;
+    }
+    .ov-next-btn {
+      background: var(--cyan-primary) !important;
+      color: #0b0f27 !important;
+      font-weight: bold !important;
+      box-shadow: 0 0 20px var(--cyan-primary) !important;
+      text-decoration: none;
+      text-align: center;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-family: var(--font-retro);
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      transition: all 0.25s;
+    }
+    .ov-next-btn:hover {
+      background: #ffffff !important;
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 0 28px #ffffff !important;
+    }
+    /* Canvas resolution is matched to its on-screen size in JS so circles/text never stretch */
+    body.crispr-page #game { flex: 1 1 0 !important; height: auto !important; min-height: 0 !important; }
+  </style>
 </head>
 <body class="crispr-page">
   <div class="scanlines"></div>
@@ -26,12 +58,15 @@
         <span id="target">TARGET SEQUENCE: A-U-G-A-G-A</span>
         <span id="health">HEALTH: 100%</span>
       </div>
-      <canvas id="game" width="1180" height="640"></canvas>
+      <!-- Fixed Proportion Canvas -->
+      <canvas id="game" width="1180" height="600"></canvas>
 
       <div class="cr-overlay show" id="overlay">
         <h2 id="ov-title">READY?</h2>
         <p id="ov-text">Move: &larr; &rarr; or A / D (or Drag/Mouse)<br>Shoot: SPACE or Click / Tap<br>Hit the bases in sequence. Mismatches damage the cell!</p>
-        <button class="cr-btn" id="start-btn" type="button">START</button>
+        <div class="ov-actions" id="ov-actions">
+          <button class="cr-btn" id="start-btn" type="button">START</button>
+        </div>
       </div>
     </section>
   </main>
@@ -56,6 +91,9 @@
   </footer>
 
   <script>
+    /* =========================================================
+       CRISPR AUDIO ENGINE & ARCADE LOOP (UNSQUISHED)
+       ========================================================= */
     let actx = null;
     let bgmInterval = null;
     let bgmIndex = 0;
@@ -193,11 +231,28 @@
     const SEQ = ['A','U','G','A','G','A'];
     const COLORS = { A:'#e8847c', U:'#a8e08a', G:'#fde172' };
     const cv = document.getElementById('game'), ctx = cv.getContext('2d');
-    const W = cv.width, H = cv.height;
+    let W = 1180, H = 600;
     const $ = id => document.getElementById(id);
 
     let bases, bullets, parts, idx, score, health, running = false, keys = {}, cool = 0;
-    const player = { x: W/2, w: 76, h: 28, speed: 5.4 };
+    
+    // Lifted cannon safely up from the bottom so it's never cut off
+    const player = { x: W/2, w: 72, h: 26, speed: 5.8, yBottomOffset: 38 };
+    const floorY = () => Math.max(160, H - 150);
+
+    function fitCanvas() {
+      const r = cv.getBoundingClientRect();
+      const nw = Math.max(320, Math.round(r.width) || 1180);
+      const nh = Math.max(260, Math.round(r.height) || 600);
+      const dpr = window.devicePixelRatio || 1;
+      const sx = nw / W, sy = nh / H;
+      [bases, bullets, parts].forEach(arr => arr && arr.forEach(o => { o.x *= sx; o.y *= sy; }));
+      player.x *= sx;
+      W = nw; H = nh;
+      cv.width = Math.round(W * dpr);
+      cv.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
 
     function spawn(forceLetter) {
       const letters = ['A','U','G'];
@@ -210,10 +265,10 @@
       return { 
         l, 
         x: 50 + Math.random()*(W-100), 
-        y: 40 + Math.random()*(H-250), 
-        r: 19,
-        vx: (Math.random()<.5?-1:1)*(.3 + Math.random()*.42), 
-        vy: (Math.random()<.5?-1:1)*(.22 + Math.random()*.34) 
+        y: 40 + Math.random()*Math.max(60, floorY() - 60), 
+        r: 18,
+        vx: (Math.random()<.5?-1:1)*(.3 + Math.random()*.4), 
+        vy: (Math.random()<.5?-1:1)*(.2 + Math.random()*.32) 
       };
     }
 
@@ -225,7 +280,8 @@
       player.x = W/2; 
       updateHUD();
 
-      const saved = localStorage.getItem('biotech_matched_role');
+      let saved = null;
+      try { saved = localStorage.getItem('biotech_matched_role'); } catch (e) {}
       if (saved) $('current-role').textContent = saved.toUpperCase();
     }
 
@@ -243,19 +299,39 @@
     function shoot() {
       if (!running || cool > 0) return;
       Sound.laser();
-      bullets.push({ x: player.x, y: H - player.h - 32, r: 6 });
+      bullets.push({ x: player.x, y: H - player.yBottomOffset - 24, r: 6 });
       cool = 14;
     }
 
+    // ADVANCES TO NEXT STAGE WITHOUT SOFTLOCK
     function end(win) {
       running = false;
       Sound.stopBGM();
-      if (win) Sound.win(); else Sound.lose();
+      if (win) {
+        Sound.win();
+        // Record simulation complete to unlock Step 3
+        try { localStorage.setItem('biotech_sim_complete', 'true'); } catch (e) {}
+      } else {
+        Sound.lose();
+      }
+
       $('ov-title').textContent = win ? 'SEQUENCE REPAIRED!' : 'DNA DAMAGED!';
       $('ov-text').innerHTML = win 
-        ? 'AUG Codon found! Protein synthesis initiated. Final score: ' + score + '.' 
-        : 'Cell integrity depleted. Final score: ' + score + '.';
-      $('start-btn').textContent = 'PLAY AGAIN';
+        ? 'AUG Codon found! Protein synthesis initiated. Step 2 Simulation completed!' 
+        : 'Cell integrity depleted. Try again to repair the DNA!';
+
+      const actions = $('ov-actions');
+      if (win) {
+        actions.innerHTML = `
+          <a href="training.html" class="ov-next-btn">NEXT STEP: INDUSTRY TRAINING &rarr;</a>
+          <button class="cr-btn" id="start-btn" type="button">REPLAY SIMULATION</button>
+        `;
+        document.getElementById('start-btn').addEventListener('click', start);
+      } else {
+        actions.innerHTML = `<button class="cr-btn" id="start-btn" type="button">TRY AGAIN</button>`;
+        document.getElementById('start-btn').addEventListener('click', start);
+      }
+
       $('overlay').classList.add('show');
     }
 
@@ -269,7 +345,7 @@
       bases.forEach(b => {
         b.x += b.vx; b.y += b.vy;
         if (b.x < b.r || b.x > W - b.r) b.vx *= -1;
-        if (b.y < b.r + 20 || b.y > H - 150) b.vy *= -1;
+        if (b.y < b.r + 20 || b.y > floorY()) b.vy *= -1;
       });
       bullets.forEach(b => b.y -= 7.5);
       bullets = bullets.filter(b => b.y > -10);
@@ -310,7 +386,7 @@
       bases.forEach(b => {
         ctx.fillStyle = COLORS[b.l];
         ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#0b0f27'; ctx.font = 'bold 16px sans-serif';
+        ctx.fillStyle = '#0b0f27'; ctx.font = 'bold 15px sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(b.l, b.x, b.y + 1);
       });
@@ -319,14 +395,18 @@
       parts.forEach(p => { ctx.globalAlpha = p.life / 24; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, 4, 4); });
       ctx.globalAlpha = 1;
       
-      // Cas9 Emitter Cannon
-      ctx.fillStyle = '#4deeea'; ctx.fillRect(player.x - 5, H - player.h - 28, 10, 20);
+      // Cannon lifted well above the bottom border so it is fully visible
+      const py = H - player.yBottomOffset;
+      ctx.fillStyle = '#4deeea'; 
+      ctx.fillRect(player.x - 5, py - 20, 10, 20);
       ctx.fillStyle = '#1e3a6e';
       ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(player.x - player.w/2, H - player.h - 10, player.w, player.h, 6);
-      else ctx.rect(player.x - player.w/2, H - player.h - 10, player.w, player.h);
+      if (ctx.roundRect) ctx.roundRect(player.x - player.w/2, py, player.w, player.h, 6);
+      else ctx.rect(player.x - player.w/2, py, player.w, player.h);
       ctx.fill();
-      ctx.strokeStyle = '#4deeea'; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.strokeStyle = '#4deeea'; 
+      ctx.lineWidth = 2.5; 
+      ctx.stroke();
     }
 
     function loop() {
@@ -336,6 +416,7 @@
     }
 
     function start() {
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
       getAudio();
       Sound.startBGM();
       reset(); 
@@ -343,14 +424,18 @@
       $('overlay').classList.remove('show');
     }
 
-    $('start-btn').addEventListener('click', start);
+    document.getElementById('start-btn').addEventListener('click', start);
+    const isTyping = e => { const t = e.target; return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable); };
     document.addEventListener('keydown', e => {
+      // Don't hijack typing in the lab notebook / Bio-Bot chat (space, A, D, Enter were being swallowed)
+      if (isTyping(e)) return;
       keys[e.code] = true;
       if (['ArrowLeft','ArrowRight','Space','KeyA','KeyD'].includes(e.code)) e.preventDefault();
       if (e.code === 'Space') { getAudio(); shoot(); }
       if (e.code === 'Enter' && !running) start();
     });
-    document.addEventListener('keyup', e => { keys[e.code] = false; });
+    document.addEventListener('keyup', e => { keys[e.code] = false; if (e.code === 'Space' && !isTyping(e)) e.preventDefault(); });
+    window.addEventListener('blur', () => { keys = {}; });
 
     function pointerX(e) {
       const r = cv.getBoundingClientRect();
@@ -362,12 +447,16 @@
     cv.addEventListener('touchstart', e => { if (running) { getAudio(); e.preventDefault(); player.x = pointerX(e); shoot(); } }, { passive: false });
     cv.addEventListener('touchmove', e => { if (running) { e.preventDefault(); player.x = pointerX(e); } }, { passive: false });
 
-    reset(); 
+    reset();
+    fitCanvas();
+    if (window.ResizeObserver) new ResizeObserver(fitCanvas).observe(cv);
+    else window.addEventListener('resize', fitCanvas);
     loop();
   </script>
 
   <script src="helix.js"></script>
   <script src="labnotebook.js"></script>
+  <script src="config.js"></script>
   <script src="biobot.js"></script>
 </body>
 </html>

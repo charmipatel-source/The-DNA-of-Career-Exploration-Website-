@@ -22,6 +22,7 @@ function labNotebookInit() {
     position: fixed;
     top: 5vh;
     bottom: 110px;
+    width: min(760px, 92vw);
     left: 50%;
     transform: translateX(-50%) translateY(20px);
     opacity: 0;
@@ -188,7 +189,7 @@ function labNotebookInit() {
   function save() {
     const data = {};
     Object.keys(fields).forEach(k => data[k] = fields[k].value);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
   }
 
   function load() {
@@ -219,7 +220,7 @@ function labNotebookInit() {
     nb.classList.remove('open');
   }
 
-  document.addEventListener('pointerdown', (e) => {
+  document.addEventListener('click', (e) => {
     const btn = e.target.closest('button, a');
     if (btn && /NOTEBOOK/i.test(btn.textContent)) {
       e.preventDefault();
@@ -228,13 +229,13 @@ function labNotebookInit() {
     }
   });
 
-  closeBtn.addEventListener('pointerdown', (e) => {
+  closeBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     closeNotebook();
   });
 
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeNotebook(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && nb.classList.contains('open')) closeNotebook(); });
   load();
 }
 

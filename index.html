@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The DNA of Career Exploration</title>
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
@@ -13,7 +13,6 @@
 <body>
   <div class="scanlines"></div>
 
-  <!-- 3D Rotating DNA Backgrounds -->
   <canvas id="dna-left" class="dna-canvas dna-left"></canvas>
   <canvas id="dna-right" class="dna-canvas dna-right"></canvas>
 
@@ -25,20 +24,20 @@
     <nav class="nav-cluster" id="main-nav-cluster">
       <div class="nav-row row-top" id="nav-row-top">
         <button class="pixel-pill-btn nav-optional btn-locked" id="btn-overview" type="button"><span class="btn-text">OVERVIEW</span></button>
-        <!-- Step 1: Quiz Button -->
+        <!-- Step 1 -->
         <a href="quiz.html" class="pixel-pill-btn solo-quiz-glow" id="btn-quiz"><span class="btn-text">AMINO ACID QUIZ</span></a>
-        <!-- Step 2: Simulation Button -->
+        <!-- Step 2 (the game) -->
         <a href="crispr.html" class="pixel-pill-btn multi-line nav-optional btn-locked" id="btn-sim"><span class="btn-text">SIMULATION &amp;<br>DILT</span></a>
       </div>
       <div class="nav-row row-bottom btn-locked" id="nav-row-bottom">
-        <!-- Step 3 & 4: Industry Training & Certification -->
+        <!-- Step 3 -->
         <a href="training.html" class="pixel-pill-btn multi-line nav-optional btn-locked" id="btn-training"><span class="btn-text">INDUSTRY<br>TRAINING</span></a>
-        <a href="training.html" class="pixel-pill-btn nav-optional btn-locked" id="btn-cert"><span class="btn-text">CERTIFICATION</span></a>
+        <!-- Step 4 -->
+        <a href="training.html#cert" class="pixel-pill-btn nav-optional btn-locked" id="btn-cert"><span class="btn-text">CERTIFICATION</span></a>
       </div>
     </nav>
 
     <main class="content-panels">
-      <!-- Panel 1: THE GAP -->
       <section class="panel-card">
         <h2 class="panel-title">THE GAP</h2>
         <div class="tab-bar">
@@ -61,7 +60,6 @@
         </div>
       </section>
 
-      <!-- Panel 2: OUR SOLUTION -->
       <section class="panel-card">
         <h2 class="panel-title">OUR SOLUTION</h2>
         <div class="tab-bar">
@@ -86,13 +84,11 @@
     </main>
 
     <footer class="bottom-bar">
-      <!-- Role Match Display Pill -->
       <div class="role-display-pill">
         <span class="role-label">ROLE:</span>
         <span class="role-value" id="current-role">TAKE THE QUIZ TO MATCH!</span>
       </div>
 
-      <!-- EXP Bar -->
       <div class="exp-container">
         <div class="exp-track">
           <div class="exp-fill" id="exp-fill"></div>
@@ -114,109 +110,63 @@
   </div>
 
   <script>
-    /* Dynamic Progression Logic */
+    /* =========================================================
+       LADDER PROGRESSION: Quiz -> Simulation (game) -> Training -> Certificate
+       Only the NEXT step is shown and glowing; finished steps are dimmed.
+       ========================================================= */
     (function checkLadderProgress() {
-      const matchedRole = localStorage.getItem('biotech_matched_role');
-      const quizBtn = document.getElementById('btn-quiz');
-      const simBtn = document.getElementById('btn-sim');
-      const trainBtn = document.getElementById('btn-training');
-      const certBtn = document.getElementById('btn-cert');
-      const overviewBtn = document.getElementById('btn-overview');
-      const optionals = document.querySelectorAll('.nav-optional');
-      const rowBottom = document.getElementById('nav-row-bottom');
+      const get = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+
+      const matchedRole = get('biotech_matched_role');
+      const simDone = get('biotech_sim_complete') === 'true';
+      const trainingDone = get('biotech_training_complete') === '1';
+
+      const el = (id) => document.getElementById(id);
+      const quizBtn = el('btn-quiz');
+      const simBtn = el('btn-sim');
+      const trainBtn = el('btn-training');
+      const certBtn = el('btn-cert');
+      const rowBottom = el('nav-row-bottom');
+      const setExp = (p) => { const f = el('exp-fill'); if (f) f.style.width = p + '%'; };
+      setExp(10);
+
+      const show = (b) => b && b.classList.remove('btn-locked');
+      const glow = (b) => b && b.classList.add('solo-quiz-glow');
+      const done = (b, label) => {
+        if (!b) return;
+        b.classList.remove('solo-quiz-glow');
+        b.classList.add('btn-completed');
+        if (label) b.querySelector('.btn-text').textContent = label;
+      };
 
       if (!matchedRole) {
-        optionals.forEach(b => b.classList.add('btn-locked'));
-        if (rowBottom) rowBottom.classList.add('btn-locked');
-        if (quizBtn) quizBtn.classList.add('solo-quiz-glow');
-      } else {
-        optionals.forEach(b => b.classList.remove('btn-locked'));
-        if (rowBottom) rowBottom.classList.remove('btn-locked');
-        if (quizBtn) {
-          quizBtn.classList.remove('solo-quiz-glow');
-          quizBtn.classList.add('btn-completed');
-          quizBtn.querySelector('.btn-text').textContent = 'QUIZ ✓';
-        }
-        if (simBtn) {
-          simBtn.classList.add('solo-quiz-glow');
-        }
-        const roleEl = document.getElementById('current-role');
-        if (roleEl) roleEl.textContent = matchedRole.toUpperCase();
-      }
-    })();
-
-    /* UI Audio Synthesizer */
-    (function initUISounds() {
-      let uiCtx = null;
-      let lastHovered = null;
-
-      function getCtx() {
-        try {
-          if (!uiCtx) {
-            const AC = window.AudioContext || window.webkitAudioContext;
-            if (AC) uiCtx = new AC();
-          }
-          if (uiCtx && uiCtx.state === 'suspended') uiCtx.resume().catch(() => {});
-          return uiCtx;
-        } catch(e) { return null; }
+        glow(quizBtn);                       // Step 1
+        return;
       }
 
-      function playHover() {
-        const c = getCtx();
-        if (!c) return;
-        try {
-          const osc = c.createOscillator();
-          const gain = c.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(540, c.currentTime);
-          gain.gain.setValueAtTime(0.04, c.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.05);
-          osc.connect(gain);
-          gain.connect(c.destination);
-          osc.start();
-          osc.stop(c.currentTime + 0.05);
-        } catch(e) {}
+      el('current-role').textContent = matchedRole.toUpperCase();
+      setExp(35);
+      done(quizBtn, 'QUIZ ✓');
+      show(simBtn);
+
+      if (!simDone) {
+        glow(simBtn);                        // Step 2: the game
+        return;
       }
 
-      function playClick() {
-        const c = getCtx();
-        if (!c) return;
-        try {
-          const osc = c.createOscillator();
-          const gain = c.createGain();
-          osc.type = 'square';
-          osc.frequency.setValueAtTime(300, c.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(150, c.currentTime + 0.07);
-          gain.gain.setValueAtTime(0.06, c.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.07);
-          osc.connect(gain);
-          gain.connect(c.destination);
-          osc.start();
-          osc.stop(c.currentTime + 0.07);
-        } catch(e) {}
+      done(simBtn);
+      setExp(trainingDone ? 100 : 60);
+      simBtn.querySelector('.btn-text').innerHTML = 'SIMULATION ✓';
+      show(rowBottom); show(trainBtn);
+
+      if (!trainingDone) {
+        glow(trainBtn);                      // Step 3
+        return;
       }
 
-      const selector = 'button, .pixel-pill-btn, .tab-btn, .action-btn';
-
-      document.addEventListener('mouseover', e => {
-        const btn = e.target.closest(selector);
-        if (btn && btn !== lastHovered) {
-          lastHovered = btn;
-          playHover();
-        }
-      });
-
-      document.addEventListener('mouseout', e => {
-        const btn = e.target.closest(selector);
-        if (btn && !btn.contains(e.relatedTarget)) {
-          lastHovered = null;
-        }
-      });
-
-      document.addEventListener('mousedown', e => {
-        const btn = e.target.closest(selector);
-        if (btn && !/NOTEBOOK/i.test(btn.textContent)) playClick();
-      });
+      done(trainBtn);
+      trainBtn.querySelector('.btn-text').innerHTML = 'TRAINING ✓';
+      show(certBtn); glow(certBtn);          // Step 4
     })();
   </script>
 

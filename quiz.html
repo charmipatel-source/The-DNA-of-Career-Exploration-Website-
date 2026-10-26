@@ -219,6 +219,7 @@
       <div class="action-links">
         <a href="crispr.html" class="pixel-pill-btn"><span class="btn-text">START SIMULATION &rarr;</span></a>
         <a href="index.html" class="pixel-pill-btn"><span class="btn-text">RETURN TO LADDER</span></a>
+        <button type="button" class="pixel-pill-btn" id="retake-btn"><span class="btn-text">RETAKE QUIZ</span></button>
       </div>
     </section>
   </main>
@@ -304,6 +305,9 @@
       "Discovery Research Scientist": "Conducts wet-lab screening experiments to invent therapeutic molecules and target novel cancer therapies. Salary: $115,000 (Bachelors or Ph.D.)."
     };
 
+    const safeGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+    const safeSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+
     let curQ = 0;
     const votes = {};
 
@@ -358,8 +362,15 @@
         }
       }
 
-      localStorage.setItem('biotech_matched_role', matchedRole);
+      safeSet('biotech_matched_role', matchedRole);
+      showResult(matchedRole);
 
+      if (window.setBioGuideSpeech) {
+        setBioGuideSpeech(`Outstanding diagnostic work! Codon decoded: ${matchedRole}! Now let's enter the lab—click below to begin the CRISPR simulation!`);
+      }
+    }
+
+    function showResult(matchedRole) {
       document.getElementById('quiz-card').style.display = 'none';
       document.getElementById('base-diagram').style.display = 'none';
       document.getElementById('stage-heading').textContent = "MATCH RESULT";
@@ -370,17 +381,24 @@
       document.getElementById('matched-role-title').textContent = matchedRole.toUpperCase();
       document.getElementById('matched-role-desc').textContent = ROLE_DETAILS[matchedRole] || "Ready for field simulation.";
       document.getElementById('current-role').textContent = matchedRole.toUpperCase();
-
-      if (window.setBioGuideSpeech) {
-        setBioGuideSpeech(`Outstanding diagnostic work! Codon decoded: ${matchedRole}! Now let's enter the lab—click below to begin the CRISPR simulation!`);
-      }
+      document.getElementById('exp-fill').style.width = '100%';
     }
 
-    renderQuestion();
+    document.getElementById('retake-btn').addEventListener('click', () => {
+      if (!confirm('Retaking the quiz will also reset your simulation and training progress. Continue?')) return;
+      ['biotech_matched_role', 'biotech_sim_complete', 'biotech_training_complete', 'biotech_training_answers']
+        .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+      location.reload();
+    });
+
+    const savedRole = safeGet('biotech_matched_role');
+    if (savedRole && ROLE_DETAILS[savedRole]) showResult(savedRole);
+    else renderQuestion();
   </script>
 
   <script src="helix.js"></script>
   <script src="labnotebook.js"></script>
+  <script src="config.js"></script>
   <script src="biobot.js"></script>
 </body>
 </html>

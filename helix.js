@@ -1,18 +1,18 @@
 /* =========================================================
    helix.js — 3D Helical Dual Strand Engine
-   Clean 100vh Ceiling-to-Floor Strands
+   Fluid Dynamic Scaling for Laptops & Desktop Monitors
    ========================================================= */
 
 function renderRotatingHelix(canvasId, phaseOffset) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  let width = 220;
-  let height = window.innerHeight;
+  let width, height;
 
   function resize() {
     const dpr = window.devicePixelRatio || 1;
-    width = 220;
+    // Dynamically scales between 140px on small laptops and 240px on wide monitors
+    width = Math.min(240, Math.max(140, window.innerWidth * 0.135));
     height = window.innerHeight;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
@@ -30,11 +30,14 @@ function renderRotatingHelix(canvasId, phaseOffset) {
   const COLOR_RUNG = '#243f73';
 
   function draw() {
+    // Skip the heavy work while the canvas is hidden (mobile layout hides it)
+    if (!canvas.getClientRects().length) { requestAnimationFrame(draw); return; }
     ctx.clearRect(0, 0, width, height);
     time += 0.009;
 
     const centerX = width / 2;
-    const radiusX = 64;
+    // Scale helix radius dynamically with canvas width
+    const radiusX = Math.min(64, width * 0.32);
     const dy = 4;
     const totalSteps = Math.ceil(height / dy) + 4;
 
@@ -53,7 +56,7 @@ function renderRotatingHelix(canvasId, phaseOffset) {
 
     function drawStrandSegments(points, color, isFrontPass) {
       ctx.save();
-      ctx.lineWidth = 22;
+      ctx.lineWidth = Math.min(22, Math.max(14, width * 0.11));
       ctx.lineCap = 'round';
       ctx.strokeStyle = color;
 
@@ -79,7 +82,7 @@ function renderRotatingHelix(canvasId, phaseOffset) {
       const targetY = r * rungInterval;
       const idx = Math.min(Math.floor(targetY / dy), strand1.length - 1);
       ctx.save();
-      ctx.lineWidth = 11;
+      ctx.lineWidth = Math.min(11, Math.max(7, width * 0.055));
       ctx.lineCap = 'round';
       ctx.strokeStyle = COLOR_RUNG;
       ctx.beginPath();
